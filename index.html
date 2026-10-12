@@ -3,20 +3,20 @@
 :root {
   --bg:#f0f3f7;--surface:#fff;--surface2:#f6f8fb;--border:#dde2ea;
   --fg:#131720;--fg2:#5a6475;--fg3:#94a0b4;
-  --a:#1d4ed8;--b:#047857;--c:#7c3aed;--d:#b45309;--e:#0e7490;--f:#be185d;
+  --a:#1d4ed8;--b:#047857;--c:#7c3aed;--d:#b45309;--e:#0e7490;--f:#be185d;--g:#0369a1;
   --danger:#dc2626;--success:#15803d;--warn:#b45309;--code:#edf0f5;
   color-scheme:light;
 }
 @media(prefers-color-scheme:dark){:root:not([data-theme="light"]){
   --bg:#0d1117;--surface:#161c26;--surface2:#1c2333;--border:#28324a;
   --fg:#dbe4f0;--fg2:#8899b4;--fg3:#4d5e78;
-  --a:#3b82f6;--b:#10b981;--c:#a78bfa;--d:#fbbf24;--e:#22d3ee;--f:#f472b6;
+  --a:#3b82f6;--b:#10b981;--c:#a78bfa;--d:#fbbf24;--e:#22d3ee;--f:#f472b6;--g:#38bdf8;
   --danger:#f87171;--success:#4ade80;--warn:#fbbf24;--code:#111620;color-scheme:dark;
 }}
 :root[data-theme="dark"]{
   --bg:#0d1117;--surface:#161c26;--surface2:#1c2333;--border:#28324a;
   --fg:#dbe4f0;--fg2:#8899b4;--fg3:#4d5e78;
-  --a:#3b82f6;--b:#10b981;--c:#a78bfa;--d:#fbbf24;--e:#22d3ee;--f:#f472b6;
+  --a:#3b82f6;--b:#10b981;--c:#a78bfa;--d:#fbbf24;--e:#22d3ee;--f:#f472b6;--g:#38bdf8;
   --danger:#f87171;--success:#4ade80;--warn:#fbbf24;--code:#111620;color-scheme:dark;
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -35,10 +35,11 @@ h1{font-size:18px;font-weight:700;letter-spacing:-.3px}
 .on-d{background:var(--d);border-color:var(--d);color:#fff}
 .on-e{background:var(--e);border-color:var(--e);color:#fff}
 .on-f{background:var(--f);border-color:var(--f);color:#fff}
+.on-g{background:var(--g);border-color:var(--g);color:#fff}
 .panel{display:none;margin-top:12px}.panel.show{display:block}
 .pbadge{display:inline-flex;align-items:center;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;padding:3px 9px;border-radius:5px;margin-bottom:6px}
 .ba{background:var(--a);color:#fff}.bb{background:var(--b);color:#fff}.bc{background:var(--c);color:#fff}
-.bd{background:var(--d);color:#fff}.be{background:var(--e);color:#fff}.bf{background:var(--f);color:#fff}
+.bd{background:var(--d);color:#fff}.be{background:var(--e);color:#fff}.bf{background:var(--f);color:#fff}.bg{background:var(--g);color:#fff}
 .pdesc{font-size:12px;color:var(--fg2);margin-bottom:12px;line-height:1.4}
 .card{background:var(--surface);border-radius:12px;border:1px solid var(--border);padding:14px;margin-bottom:10px}
 .ct{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--fg3);margin-bottom:10px}
@@ -46,7 +47,7 @@ button{border:none;border-radius:8px;padding:9px 14px;font-size:14px;font-weight
 button:disabled{opacity:.35;pointer-events:none}
 .btn-rec{background:var(--danger);color:#fff}.btn-stop{background:var(--fg2);color:#fff}
 .btn-a{background:var(--a);color:#fff}.btn-b{background:var(--b);color:#fff}.btn-c{background:var(--c);color:#fff}
-.btn-d{background:var(--d);color:#fff}.btn-e{background:var(--e);color:#fff}.btn-f{background:var(--f);color:#fff}
+.btn-d{background:var(--d);color:#fff}.btn-e{background:var(--e);color:#fff}.btn-f{background:var(--f);color:#fff}.btn-g{background:var(--g);color:#fff}
 .btn-sm{background:var(--surface2);border:1px solid var(--border);color:var(--fg2);font-size:12px;padding:5px 10px}
 .rrow{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .timer{font-size:14px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--danger);min-width:46px}
@@ -88,6 +89,7 @@ audio{width:100%;margin-top:10px;border-radius:6px}
   <button class="tb" id="tb-cold" onclick="sw('cold')">Cold</button>
   <button class="tb" id="tb-newel" onclick="sw('newel')">New El</button>
   <button class="tb" id="tb-fixa" onclick="sw('fixa')">Fix A</button>
+  <button class="tb" id="tb-appcode" onclick="sw('appcode')">App Code</button>
 </div>
 
 <!-- ────────────────────── BASELINE ────────────────────── -->
@@ -193,6 +195,29 @@ audio{width:100%;margin-top:10px;border-radius:6px}
   <div class="card"><div class="chdr"><span class="ct" style="margin:0">이벤트 로그</span><button class="btn-sm" id="cl-fixa">지우기</button></div><div class="lw" id="lg-fixa"><p class="empty">이벤트가 없습니다.</p></div></div>
 </div>
 
+<!-- ────────────────────── APP CODE ────────────────────── -->
+<div class="panel" id="panel-appcode">
+  <div class="pbadge bg">App Code</div>
+  <p class="pdesc">
+    App.jsx <code>playVoiceMemo()</code> 로직 그대로 복제: <code>freshPlaybackRef</code> 객체, identity 체크, ended/error/정지 정리 경로 포함.<br>
+    검증 시나리오: ① 녹음 후 첫 재생 ② 두 번째 재생 ③ 재생 중 정지 ④ 정지 후 재생 ⑤ 새 녹음 후 첫 재생
+  </p>
+  <div class="card"><div class="ct">녹음</div>
+    <div class="rrow"><button class="btn-rec" id="rb-appcode">● 녹음 시작</button><button class="btn-stop" id="sb-appcode" hidden>■ 녹음 멈춤</button><span class="timer" id="tm-appcode"></span></div>
+    <p class="status" id="st-appcode">준비</p>
+  </div>
+  <div class="card"><div class="ct">재생 — App.jsx playVoiceMemo() 경로</div>
+    <div class="rrow">
+      <button class="btn-g" id="pb-appcode" disabled>▶ 재생</button>
+      <button class="btn-stop" id="stopplay-appcode" disabled>■ 재생 정지</button>
+    </div>
+    <p class="status" id="ps-appcode">대기 중</p>
+  </div>
+  <div class="card"><div class="ct">freshPlaybackRef 상태</div><div id="fp-appcode"><p class="empty">재생 전 비어있음.</p></div></div>
+  <div class="card"><div class="ct">진단값</div><div id="dg-appcode"><p class="empty">재생 버튼을 누르면 표시됩니다.</p></div></div>
+  <div class="card"><div class="chdr"><span class="ct" style="margin:0">이벤트 로그</span><button class="btn-sm" id="cl-appcode">지우기</button></div><div class="lw" id="lg-appcode"><p class="empty">이벤트가 없습니다.</p></div></div>
+</div>
+
 <script>
 // ── ENV ──────────────────────────────────────────────────────────────────────
 (()=>{
@@ -205,7 +230,7 @@ audio{width:100%;margin-top:10px;border-radius:6px}
 })();
 
 // ── TABS ──────────────────────────────────────────────────────────────────────
-const TCLS={baseline:'on-a',fixb:'on-b',delay:'on-d',cold:'on-e',newel:'on-f',fixa:'on-c'};
+const TCLS={baseline:'on-a',fixb:'on-b',delay:'on-d',cold:'on-e',newel:'on-f',fixa:'on-c',appcode:'on-g'};
 function sw(id){
   Object.keys(TCLS).forEach(t=>{
     document.getElementById('panel-'+t).classList.toggle('show',t===id);
@@ -595,5 +620,204 @@ function makeRec(id,{onStop,hasTrackDisplay}){
     upsert(a);invokePlay(audio,memo,a,addLog,upsert);
   });
   document.getElementById('cl-fixa').addEventListener('click',()=>{document.getElementById('lg-fixa').innerHTML='<p class="empty">이벤트가 없습니다.</p>';clear();playCount=0});
+}
+
+// ── APP CODE ──────────────────────────────────────────────────────────────────
+// Mirrors App.jsx playVoiceMemo() + stopVoicePlayback() exactly.
+// freshPlaybackRef = plain object (mirrors freshPlaybackRef.current)
+// memoKey = fixed single key for this diagnostic tab
+{
+  let freshPlaybackRef={};
+  let blobURL=null;
+  const memoKey='diag-verse-1';
+  let playCount=0;
+  let stream=null,recorder=null,chunks=[],timerInt=null,timerSec=0;
+
+  const addLog=mkLog('appcode');
+  const{upsert,clear}=mkDiag('appcode');
+  const statusEl=document.getElementById('st-appcode');
+  const playStatusEl=document.getElementById('ps-appcode');
+  const pbBtn=document.getElementById('pb-appcode');
+  const stopPlayBtn=document.getElementById('stopplay-appcode');
+  const recBtn=document.getElementById('rb-appcode');
+  const sBtn=document.getElementById('sb-appcode');
+  const timerEl=document.getElementById('tm-appcode');
+
+  function renderFP(){
+    const el=document.getElementById('fp-appcode');
+    const keys=Object.keys(freshPlaybackRef);
+    if(!keys.length){el.innerHTML='<div class="dgrid"><span class="dk">freshPlaybackRef</span><span class="dv na">{} — 비어있음</span></div>';return}
+    el.innerHTML='<div class="dgrid">'+keys.map(k=>{
+      const src=freshPlaybackRef[k]?.src||'';
+      const short=src.startsWith('blob:')?'blob:…'+src.slice(-12):src.slice(0,32)+(src.length>32?'…':'');
+      return`<span class="dk">${k}</span><span class="dv ok">Audio src=${short}</span>`;
+    }).join('')+'</div>';
+  }
+
+  // ── Recorder ──
+  recBtn.addEventListener('click',async()=>{
+    try{
+      statusEl.textContent='마이크 권한 요청 중...';recBtn.disabled=true;
+      // New recording: stop any current playback (mirrors App.jsx recording start)
+      stopPlayback('새 녹음 시작');
+      stream=await navigator.mediaDevices.getUserMedia({audio:true});
+      addLog('getUserMedia',{tracks:stream.getAudioTracks().length});
+      chunks=[];
+      const mimeType=suppMime();
+      recorder=mimeType?new MediaRecorder(stream,{mimeType}):new MediaRecorder(stream);
+      addLog('recorder-created',{mimeType:recorder.mimeType||'(default)'});
+      recorder.ondataavailable=e=>{if(e.data?.size)chunks.push(e.data)};
+      recorder.onstop=()=>{
+        stopStream(stream);stream=null;
+        clearInterval(timerInt);timerInt=null;timerEl.textContent='';
+        if(!chunks.length){statusEl.textContent='녹음 데이터 없음.';recBtn.disabled=false;recBtn.hidden=false;sBtn.hidden=true;return}
+        const type=recorder.mimeType||mimeType||chunks[0]?.type||'audio/webm';
+        const blob=new Blob(chunks,{type});chunks=[];
+        if(blobURL)URL.revokeObjectURL(blobURL);
+        blobURL=URL.createObjectURL(blob);
+        addLog('memo-stored',{blobSize:blob.size,type});
+        recBtn.disabled=false;recBtn.textContent='● 다시 녹음';recBtn.hidden=false;sBtn.hidden=true;
+        pbBtn.disabled=false;
+        statusEl.textContent='녹음 완료 — ▶ 재생 버튼을 눌러 주세요.';
+        renderFP();
+      };
+      recorder.start();
+      timerSec=0;timerInt=setInterval(()=>{timerSec++;timerEl.textContent=String(Math.floor(timerSec/60)).padStart(2,'0')+':'+String(timerSec%60).padStart(2,'0')},1000);
+      recBtn.hidden=true;sBtn.hidden=false;sBtn.disabled=false;
+      statusEl.textContent='녹음 중...';addLog('recording-started');
+    }catch(err){statusEl.textContent='오류: '+err.message;recBtn.disabled=false;addLog('error',{msg:err.message},'lv-err')}
+  });
+  sBtn.addEventListener('click',()=>{if(recorder&&recorder.state!=='inactive'){sBtn.disabled=true;recorder.stop()}});
+
+  // ── playVoiceMemo() — mirrors App.jsx exactly ──
+  function playVoiceMemo(){
+    if(!blobURL)return;
+    playCount++;
+    const stype=snapshotSession();
+    const a={count:playCount,result:'pending',rows:[
+      ['시도','#'+playCount],
+      ['blobURL',blobURL?'있음':'없음',blobURL?'ok':'err'],
+      ['session.type',stype,stype==='playback'?'ok':stype==='미지원'?'na':'warn'],
+    ]};
+    upsert(a);
+    addLog('playVoiceMemo-시작',{memoKey,count:playCount},'lv-ctx');
+
+    // Step 1: 이전 fresh 정리 (동일 memoKey)
+    const prevFresh=freshPlaybackRef[memoKey];
+    if(prevFresh){
+      addLog('cleanup-prev-same-key',{memoKey});
+      try{prevFresh.pause();prevFresh.src=''}catch(e){}
+      delete freshPlaybackRef[memoKey];
+    }
+
+    // Step 2: 다른 key의 fresh 모두 정리
+    const otherKeys=Object.keys(freshPlaybackRef);
+    if(otherKeys.length){
+      addLog('cleanup-other-keys',{count:otherKeys.length});
+      otherKeys.forEach(k=>{const f=freshPlaybackRef[k];try{f.pause();f.src=''}catch(e){};delete freshPlaybackRef[k]});
+    }
+
+    // Step 3: new Audio() 생성
+    const fresh=new Audio();
+    addLog('new-audio-created',{},'lv-ctx');
+
+    // Step 4: src 설정
+    fresh.src=blobURL;
+
+    // Step 5: freshPlaybackRef에 저장
+    freshPlaybackRef[memoKey]=fresh;
+
+    // Step 6: UI 즉시 업데이트 (play() 호출 전 — App.jsx의 setPlayingVoiceMemoId 호출 시점)
+    playStatusEl.textContent='재생 중... (#'+playCount+')';
+    stopPlayBtn.disabled=false;
+    a.rows.push(['UI 업데이트','playing — play() 호출 전','ok']);
+    upsert(a);
+    renderFP();
+
+    // Step 7: ended 이벤트 (once) — identity 체크 포함
+    fresh.addEventListener('ended',()=>{
+      const match=freshPlaybackRef[memoKey]===fresh;
+      addLog('ended',{identity:match?'match':'stale'});
+      if(match){
+        delete freshPlaybackRef[memoKey];
+        playStatusEl.textContent='재생 완료 (ended)';
+        stopPlayBtn.disabled=true;
+        renderFP();
+      }
+      fresh.src='';
+    },{once:true});
+
+    // Step 8: error 이벤트 (once)
+    fresh.addEventListener('error',()=>{
+      const e=fresh.error;
+      addLog('audio-error',{code:e?.code,msg:e?.message},'lv-err');
+      if(freshPlaybackRef[memoKey]===fresh){
+        delete freshPlaybackRef[memoKey];
+        playStatusEl.textContent='오디오 오류: '+(e?.message||'unknown');
+        stopPlayBtn.disabled=true;
+        renderFP();
+      }
+      fresh.src='';
+      a.result='audio-error';
+      a.rows.push(['audio error',(e?.code||'?')+': '+(e?.message||'?'),'err']);
+      upsert(a);
+    },{once:true});
+
+    // Step 9: currentTime 리셋 후 play()
+    fresh.currentTime=0;
+    try{
+      const p=fresh.play();
+      if(p){
+        p.then(()=>{
+          addLog('play-success',{rs:rsl(fresh.readyState)},'lv-play');
+          a.result='success';a.rows.push(['play() 결과','success','ok']);upsert(a);
+        }).catch(err=>{
+          addLog('play-failed',{err:err.name+': '+err.message},'lv-err');
+          if(freshPlaybackRef[memoKey]===fresh){
+            delete freshPlaybackRef[memoKey];
+            playStatusEl.textContent='재생 실패: '+err.message;
+            stopPlayBtn.disabled=true;
+            renderFP();
+          }
+          fresh.src='';
+          a.result='error';a.rows.push(['play() 결과',err.name+': '+err.message,'err']);upsert(a);
+        });
+      }else{
+        addLog('play-success-sync',{},'lv-play');
+        a.result='success(sync)';a.rows.push(['play() 결과','success(sync)','ok']);upsert(a);
+      }
+    }catch(err){
+      // Step 10: 동기 예외 처리
+      addLog('play-sync-exception',{err:err.name+': '+err.message},'lv-err');
+      if(freshPlaybackRef[memoKey]===fresh){
+        delete freshPlaybackRef[memoKey];
+        playStatusEl.textContent='예외: '+err.message;
+        stopPlayBtn.disabled=true;
+        renderFP();
+      }
+      fresh.src='';
+      a.result='sync-exception';a.rows.push(['play() 예외',err.name+': '+err.message,'err']);upsert(a);
+    }
+  }
+
+  // ── stopVoicePlayback() — mirrors App.jsx ──
+  function stopPlayback(reason){
+    const keys=Object.keys(freshPlaybackRef);
+    if(keys.length){
+      addLog('stopPlayback',{count:keys.length,reason:reason||'버튼'});
+      keys.forEach(k=>{const f=freshPlaybackRef[k];try{f.pause();f.src=''}catch(e){}});
+      freshPlaybackRef={};
+      renderFP();
+    }
+    playStatusEl.textContent='정지됨'+(reason?' ('+reason+')':'');
+    stopPlayBtn.disabled=true;
+  }
+
+  pbBtn.addEventListener('click',playVoiceMemo);
+  stopPlayBtn.addEventListener('click',()=>stopPlayback('버튼'));
+  document.getElementById('cl-appcode').addEventListener('click',()=>{
+    document.getElementById('lg-appcode').innerHTML='<p class="empty">이벤트가 없습니다.</p>';
+    clear();playCount=0;
+  });
 }
 </script>
