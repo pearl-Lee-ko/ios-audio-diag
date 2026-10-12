@@ -1,0 +1,453 @@
+<title>iOS 오디오 진단</title>
+<style>
+/* Layout: single-column, mobile-first, tab-switched panels */
+:root {
+  --bg: #f0f3f7;
+  --surface: #ffffff;
+  --surface2: #f6f8fb;
+  --border: #dde2ea;
+  --fg: #131720;
+  --fg2: #5a6475;
+  --fg3: #94a0b4;
+  --accent-a: #1d4ed8;
+  --accent-b: #047857;
+  --danger: #dc2626;
+  --success: #15803d;
+  --warn: #b45309;
+  --code-bg: #edf0f5;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0d1117;
+    --surface: #161c26;
+    --surface2: #1c2333;
+    --border: #28324a;
+    --fg: #dbe4f0;
+    --fg2: #8899b4;
+    --fg3: #4d5e78;
+    --accent-a: #3b82f6;
+    --accent-b: #10b981;
+    --danger: #f87171;
+    --success: #4ade80;
+    --warn: #fbbf24;
+    --code-bg: #111620;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0d1117; --surface: #161c26; --surface2: #1c2333;
+  --border: #28324a; --fg: #dbe4f0; --fg2: #8899b4; --fg3: #4d5e78;
+  --accent-a: #3b82f6; --accent-b: #10b981;
+  --danger: #f87171; --success: #4ade80; --warn: #fbbf24;
+  --code-bg: #111620; color-scheme: dark;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: var(--bg); color: var(--fg);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  font-size: 15px; line-height: 1.5;
+  padding-inline: 16px; padding-block: 14px 28px;
+}
+h1 { font-size: 18px; font-weight: 700; letter-spacing: -0.3px; }
+.subtitle { font-size: 12px; color: var(--fg3); margin-top: 2px; }
+.tabs { display: flex; gap: 6px; margin-top: 14px; }
+.tab-btn {
+  flex: 1; padding: 9px 6px; border-radius: 9px;
+  border: 1.5px solid var(--border); background: var(--surface);
+  color: var(--fg2); font-size: 14px; font-weight: 700; cursor: pointer;
+  transition: background .15s, color .15s, border-color .15s;
+}
+.tab-btn.on-a { background: var(--accent-a); border-color: var(--accent-a); color: #fff; }
+.tab-btn.on-b { background: var(--accent-b); border-color: var(--accent-b); color: #fff; }
+.panel { display: none; margin-top: 12px; }
+.panel.show { display: block; }
+.panel-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.7px;
+  padding: 3px 9px; border-radius: 5px; margin-bottom: 6px;
+}
+.badge-a { background: var(--accent-a); color: #fff; }
+.badge-b { background: var(--accent-b); color: #fff; }
+.panel-desc { font-size: 12px; color: var(--fg2); margin-bottom: 12px; line-height: 1.4; }
+.card {
+  background: var(--surface); border-radius: 12px;
+  border: 1px solid var(--border); padding: 14px; margin-bottom: 10px;
+}
+.card-title {
+  font-size: 11px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.6px; color: var(--fg3); margin-bottom: 10px;
+}
+button { border: none; border-radius: 8px; padding: 9px 14px; font-size: 14px; font-weight: 600; cursor: pointer; line-height: 1; }
+button:disabled { opacity: 0.35; pointer-events: none; }
+.btn-rec { background: var(--danger); color: #fff; }
+.btn-stop { background: var(--fg2); color: #fff; }
+.btn-a { background: var(--accent-a); color: #fff; }
+.btn-b { background: var(--accent-b); color: #fff; }
+.btn-sm { background: var(--surface2); border: 1px solid var(--border); color: var(--fg2); font-size: 12px; padding: 5px 10px; }
+.rec-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.timer { font-size: 14px; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--danger); min-width: 46px; }
+.status { font-size: 13px; color: var(--fg2); margin-top: 8px; min-height: 1.4em; }
+audio { width: 100%; margin-top: 10px; border-radius: 6px; }
+.card-hdr { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.empty { font-size: 12px; color: var(--fg3); font-style: italic; padding: 2px 0; }
+.attempts { display: flex; flex-direction: column; gap: 8px; }
+.attempt { }
+.attempt-num {
+  font-size: 11px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.5px; color: var(--fg3); margin-bottom: 5px;
+}
+.dgrid {
+  display: grid; grid-template-columns: auto 1fr; gap: 3px 10px;
+  font-size: 12px; font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  background: var(--code-bg); border-radius: 8px; padding: 9px 10px;
+  min-width: 0;
+}
+.dk { color: var(--fg2); white-space: nowrap; }
+.dv { color: var(--fg); word-break: break-all; min-width: 0; }
+.dv.ok { color: var(--success); font-weight: 600; }
+.dv.err { color: var(--danger); font-weight: 600; }
+.dv.warn { color: var(--warn); }
+.log-wrap { max-height: 200px; overflow-y: auto; border-radius: 8px; background: var(--code-bg); padding: 7px 9px; }
+.le {
+  font-size: 11px; font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  padding: 2px 0; border-bottom: 1px solid var(--border); line-height: 1.45;
+  color: var(--fg2);
+}
+.le:last-child { border-bottom: none; }
+.lt { color: var(--fg3); margin-right: 4px; }
+.lev { color: var(--fg); font-weight: 600; margin-right: 4px; }
+.ld { color: var(--fg3); }
+.le.lv-play .lev { color: var(--success); }
+.le.lv-err .lev { color: var(--danger); }
+.le.lv-warn .lev { color: var(--warn); }
+</style>
+
+<header>
+  <h1>iOS 오디오 진단</h1>
+  <p class="subtitle">계시록 한입 — 녹음 후 첫 재생 무음 현상 검증 · 외부 서버 전송 없음</p>
+</header>
+
+<div class="tabs">
+  <button class="tab-btn on-a" id="tab-baseline" onclick="switchTab('baseline')">Baseline</button>
+  <button class="tab-btn" id="tab-fixb" onclick="switchTab('fixb')">Fix B</button>
+</div>
+
+<div class="panel show" id="panel-baseline">
+  <div class="panel-badge badge-a">Baseline</div>
+  <p class="panel-desc">현재 앱 로직: <code>audio.load()</code> 후 <code>canplay</code> 이벤트를 기다린 뒤 <code>play()</code> 호출</p>
+  <div class="card">
+    <div class="card-title">녹음</div>
+    <div class="rec-row">
+      <button class="btn-rec" id="rec-btn-baseline">● 녹음 시작</button>
+      <button class="btn-stop" id="stop-btn-baseline" hidden>■ 녹음 멈춤</button>
+      <span class="timer" id="timer-baseline"></span>
+    </div>
+    <p class="status" id="status-baseline">준비</p>
+    <audio id="audio-baseline" preload="metadata" controls hidden></audio>
+  </div>
+  <div class="card">
+    <div class="card-title">재생</div>
+    <button class="btn-a" id="play-btn-baseline" disabled>▶ 듣기</button>
+  </div>
+  <div class="card">
+    <div class="card-title">진단값</div>
+    <div id="diag-baseline"><p class="empty">재생 버튼을 누르면 값이 표시됩니다.</p></div>
+  </div>
+  <div class="card">
+    <div class="card-hdr">
+      <span class="card-title" style="margin:0;">이벤트 로그</span>
+      <button class="btn-sm" id="clear-baseline">지우기</button>
+    </div>
+    <div class="log-wrap" id="log-baseline"><p class="empty">이벤트가 없습니다.</p></div>
+  </div>
+</div>
+
+<div class="panel" id="panel-fixb">
+  <div class="panel-badge badge-b">Fix B</div>
+  <p class="panel-desc">수정안: <code>canplay</code> 대기 제거, 사용자 제스처 컨텍스트 안에서 직접 <code>play()</code> 호출</p>
+  <div class="card">
+    <div class="card-title">녹음</div>
+    <div class="rec-row">
+      <button class="btn-rec" id="rec-btn-fixb">● 녹음 시작</button>
+      <button class="btn-stop" id="stop-btn-fixb" hidden>■ 녹음 멈춤</button>
+      <span class="timer" id="timer-fixb"></span>
+    </div>
+    <p class="status" id="status-fixb">준비</p>
+    <audio id="audio-fixb" preload="metadata" controls hidden></audio>
+  </div>
+  <div class="card">
+    <div class="card-title">재생</div>
+    <button class="btn-b" id="play-btn-fixb" disabled>▶ 듣기</button>
+  </div>
+  <div class="card">
+    <div class="card-title">진단값</div>
+    <div id="diag-fixb"><p class="empty">재생 버튼을 누르면 값이 표시됩니다.</p></div>
+  </div>
+  <div class="card">
+    <div class="card-hdr">
+      <span class="card-title" style="margin:0;">이벤트 로그</span>
+      <button class="btn-sm" id="clear-fixb">지우기</button>
+    </div>
+    <div class="log-wrap" id="log-fixb"><p class="empty">이벤트가 없습니다.</p></div>
+  </div>
+</div>
+
+<script>
+function switchTab(id) {
+  ['baseline','fixb'].forEach(t => {
+    document.getElementById('panel-' + t).classList.toggle('show', t === id);
+    const btn = document.getElementById('tab-' + t);
+    btn.classList.remove('on-a', 'on-b');
+    if (t === id) btn.classList.add(t === 'baseline' ? 'on-a' : 'on-b');
+  });
+}
+
+// Shared helpers
+function supportedMimeType() {
+  const types = ["audio/webm;codecs=opus","audio/webm","audio/mp4","audio/ogg;codecs=opus"];
+  return types.find(t => { try { return typeof MediaRecorder !== "undefined" && MediaRecorder.isTypeSupported?.(t); } catch(e) { return false; } }) || "";
+}
+function stopStream(stream) {
+  stream?.getTracks?.().forEach(t => { try { t.stop(); } catch(e) {} });
+}
+const RS = ["HAVE_NOTHING","HAVE_METADATA","HAVE_CURRENT_DATA","HAVE_FUTURE_DATA","HAVE_ENOUGH_DATA"];
+function rsl(n) { return `${RS[n] ?? "?"}(${n})`; }
+
+function createPanel(id) {
+  const isB = id === 'fixb';
+  const recBtn  = document.getElementById('rec-btn-'  + id);
+  const stopBtn = document.getElementById('stop-btn-' + id);
+  const playBtn = document.getElementById('play-btn-' + id);
+  const audio   = document.getElementById('audio-'    + id);
+  const statusEl= document.getElementById('status-'   + id);
+  const diagEl  = document.getElementById('diag-'     + id);
+  const logEl   = document.getElementById('log-'      + id);
+  const timerEl = document.getElementById('timer-'    + id);
+
+  let stream = null, recorder = null, chunks = [], memo = null;
+  let trackStopTime = null, playCount = 0, pendingPlayback = null;
+  let timerInt = null, timerSec = 0;
+  const attempts = [];
+
+  // ── LOGGING ──────────────────────────────────────────────────────
+  function addLog(event, details, cls) {
+    if (logEl.querySelector('.empty')) logEl.innerHTML = '';
+    const t = new Date();
+    const ts = `${String(t.getHours()).padStart(2,'0')}:${String(t.getMinutes()).padStart(2,'0')}:${String(t.getSeconds()).padStart(2,'0')}.${String(t.getMilliseconds()).padStart(3,'0')}`;
+    const dStr = details ? Object.entries(details).map(([k,v]) => `${k}=${v}`).join(' ') : '';
+    const div = document.createElement('div');
+    div.className = 'le' + (cls ? ' ' + cls : '');
+    div.innerHTML = `<span class="lt">${ts}</span><span class="lev">${event}</span><span class="ld">${dStr}</span>`;
+    logEl.prepend(div);
+  }
+
+  // ── DIAGNOSTIC DISPLAY ───────────────────────────────────────────
+  function renderDiag() {
+    if (!attempts.length) {
+      diagEl.innerHTML = '<p class="empty">재생 버튼을 누르면 값이 표시됩니다.</p>';
+      return;
+    }
+    diagEl.innerHTML = '<div class="attempts">' + attempts.map(a => {
+      const rows = [
+        ['녹음종료→재생요청', a.elapsed >= 0 ? a.elapsed + 'ms' : '-', (a.elapsed >= 0 && a.elapsed < 1500) ? 'warn' : ''],
+        ['readyState (진입)', rsl(a.rs0)],
+        ['sameUrl', String(a.sameUrl)],
+        ['경로', a.path],
+        ['play() 결과', a.result, a.result.startsWith('success') ? 'ok' : a.result === 'pending' ? 'warn' : 'err'],
+      ];
+      if (a.error) rows.push(['오류', a.error, 'err']);
+      return `<div class="attempt">
+        <div class="attempt-num">시도 #${a.count}</div>
+        <div class="dgrid">${rows.map(([k,v,c='']) =>
+          `<span class="dk">${k}</span><span class="dv ${c}">${v}</span>`).join('')}
+        </div></div>`;
+    }).join('') + '</div>';
+  }
+
+  function upsertAttempt(a) {
+    const i = attempts.findIndex(x => x.count === a.count);
+    if (i >= 0) attempts[i] = a; else { attempts.unshift(a); if (attempts.length > 5) attempts.pop(); }
+    renderDiag();
+  }
+
+  // ── RECORDING ────────────────────────────────────────────────────
+  async function startRec() {
+    try {
+      statusEl.textContent = '마이크 권한 요청 중...';
+      recBtn.disabled = true;
+      stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      addLog('getUserMedia', { tracks: stream.getTracks().length });
+      chunks = []; memo = null;
+      audio.removeAttribute('src'); audio.hidden = true;
+      playBtn.disabled = true;
+      const mimeType = supportedMimeType();
+      recorder = mimeType ? new MediaRecorder(stream, { mimeType }) : new MediaRecorder(stream);
+      addLog('recorder-created', { mimeType: recorder.mimeType || '(default)' });
+      recorder.ondataavailable = e => { if (e.data?.size) chunks.push(e.data); };
+      recorder.onstop = () => {
+        // ── stopStream: same as app's stopStream() call in onstop ──
+        stopStream(stream); stream = null;
+        trackStopTime = Date.now();
+        addLog('track.stop', {}, 'lv-warn');
+        clearInterval(timerInt); timerInt = null; timerEl.textContent = '';
+        if (!chunks.length) {
+          statusEl.textContent = '녹음 데이터가 없습니다.';
+          recBtn.disabled = false; recBtn.hidden = false; stopBtn.hidden = true; return;
+        }
+        const type = recorder.mimeType || mimeType || chunks[0]?.type || 'audio/webm';
+        const blob = new Blob(chunks, { type }); chunks = [];
+        const url = URL.createObjectURL(blob);
+        memo = { blob, url };
+        // ── React src={memo.url} prop equivalent ──
+        audio.src = url; audio.hidden = false;
+        addLog('memo-stored', { blobSize: blob.size, readyState: rsl(audio.readyState), type });
+        statusEl.textContent = '녹음 완료 — ▶ 듣기 버튼을 눌러 주세요.';
+        playBtn.disabled = false;
+        recBtn.disabled = false; recBtn.textContent = '● 다시 녹음';
+        recBtn.hidden = false; stopBtn.hidden = true;
+      };
+      recorder.start();
+      timerSec = 0; timerInt = setInterval(() => {
+        timerSec++;
+        timerEl.textContent = String(Math.floor(timerSec/60)).padStart(2,'0') + ':' + String(timerSec%60).padStart(2,'0');
+      }, 1000);
+      recBtn.hidden = true; stopBtn.hidden = false; stopBtn.disabled = false;
+      statusEl.textContent = '녹음 중...';
+      addLog('recording-started');
+    } catch(err) {
+      statusEl.textContent = '오류: ' + err.message;
+      recBtn.disabled = false;
+      addLog('error', { msg: err.message }, 'lv-err');
+    }
+  }
+  function stopRec() {
+    if (recorder && recorder.state !== 'inactive') { stopBtn.disabled = true; recorder.stop(); }
+  }
+
+  // ── PLAYBACK SHARED ───────────────────────────────────────────────
+  function clearPending() {
+    const p = pendingPlayback; if (p?.timeoutId) clearTimeout(p.timeoutId);
+    pendingPlayback = null; return p;
+  }
+  function invokePlay(a) {
+    const cm = memo;
+    if (!cm?.url || audio.src !== cm.url) {
+      addLog('stale-before-play', {}, 'lv-err');
+      a.result = 'stale'; upsertAttempt(a); return;
+    }
+    addLog('play-invoked', { readyState: rsl(audio.readyState) });
+    audio.currentTime = 0;
+    const p = audio.play();
+    if (p) {
+      p.then(() => {
+        a.result = 'success'; addLog('play-success', { readyState: rsl(audio.readyState) }, 'lv-play');
+        upsertAttempt(a);
+      }).catch(err => {
+        a.result = 'error'; a.error = err.name + ': ' + err.message;
+        addLog('play-failed', { err: err.name + ': ' + err.message }, 'lv-err');
+        upsertAttempt(a);
+      });
+    } else {
+      a.result = 'success(sync)'; upsertAttempt(a);
+    }
+  }
+  function handleCanPlay(evt) {
+    const el = evt.currentTarget || audio;
+    addLog('canplay', { readyState: rsl(el.readyState), hasPending: !!pendingPlayback });
+    const p = clearPending(); if (!p) return;
+    if (p.url !== memo?.url) { addLog('stale-canplay', {}, 'lv-warn'); return; }
+    p.a.path += ' → canplay-fired'; invokePlay(p.a);
+  }
+
+  // ── PLAYBACK: BASELINE (current app logic) ────────────────────────
+  function playBaseline() {
+    const cm = memo;
+    playCount++;
+    const a = { count: playCount, elapsed: trackStopTime != null ? Date.now() - trackStopTime : -1,
+                rs0: audio.readyState, sameUrl: false, path: '?', result: 'pending', error: null };
+    addLog('play-requested', { elapsed: a.elapsed >= 0 ? a.elapsed + 'ms' : '-', readyState: rsl(audio.readyState) });
+    if (!cm?.blob?.size || !cm?.url) { a.path = 'no-memo'; a.result = 'no-memo'; upsertAttempt(a); return; }
+    clearPending(); audio.pause();
+    const sameUrl = audio.src === cm.url || audio.currentSrc === cm.url;
+    a.sameUrl = sameUrl;
+    if (sameUrl && audio.readyState >= HTMLMediaElement.HAVE_FUTURE_DATA) {
+      a.path = 'HAVE_FUTURE_DATA → direct'; addLog('reuse-loaded', { readyState: rsl(audio.readyState) });
+      upsertAttempt(a); invokePlay(a); return;
+    }
+    const tid = setTimeout(() => {
+      if (!pendingPlayback || pendingPlayback.url !== cm.url) return;
+      clearPending(); a.result = 'timeout(5s)'; addLog('canplay-timeout', {}, 'lv-err'); upsertAttempt(a);
+    }, 5000);
+    pendingPlayback = { url: cm.url, timeoutId: tid, a };
+    if (sameUrl && audio.readyState >= HTMLMediaElement.HAVE_METADATA) {
+      a.path = 'HAVE_METADATA → wait-canplay'; addLog('wait-existing-load', { readyState: rsl(audio.readyState) });
+      upsertAttempt(a); return;
+    }
+    audio.src = cm.url; addLog('load-requested', { readyState: rsl(audio.readyState) });
+    audio.load(); addLog('load-called', { readyState: rsl(audio.readyState) });
+    a.path = '!sameUrl → load → wait-canplay'; upsertAttempt(a);
+    if (audio.readyState >= HTMLMediaElement.HAVE_FUTURE_DATA) handleCanPlay({ currentTarget: audio });
+  }
+
+  // ── PLAYBACK: FIX B (direct play, no canplay wait) ─────────────────
+  function playFixB() {
+    const cm = memo;
+    playCount++;
+    const a = { count: playCount, elapsed: trackStopTime != null ? Date.now() - trackStopTime : -1,
+                rs0: audio.readyState, sameUrl: false, path: '?', result: 'pending', error: null };
+    addLog('play-requested', { elapsed: a.elapsed >= 0 ? a.elapsed + 'ms' : '-', readyState: rsl(audio.readyState) });
+    if (!cm?.blob?.size || !cm?.url) { a.path = 'no-memo'; a.result = 'no-memo'; upsertAttempt(a); return; }
+    clearPending(); audio.pause();
+    const sameUrl = audio.src === cm.url || audio.currentSrc === cm.url;
+    a.sameUrl = sameUrl;
+    if (sameUrl && audio.readyState >= HTMLMediaElement.HAVE_FUTURE_DATA) {
+      a.path = 'HAVE_FUTURE_DATA → direct'; addLog('reuse-loaded', { readyState: rsl(audio.readyState) });
+      upsertAttempt(a); invokePlay(a); return;
+    }
+    if (!sameUrl) {
+      audio.src = cm.url; addLog('load-requested', { readyState: rsl(audio.readyState) });
+      audio.load(); addLog('load-called', { readyState: rsl(audio.readyState) });
+      a.path = '!sameUrl → load → direct-play';
+    } else {
+      a.path = 'sameUrl readyState(' + audio.readyState + ') → direct-play';
+    }
+    upsertAttempt(a); invokePlay(a);
+  }
+
+  // ── AUDIO EVENTS ─────────────────────────────────────────────────
+  audio.addEventListener('loadedmetadata', () =>
+    addLog('loadedmetadata', { readyState: rsl(audio.readyState), dur: isNaN(audio.duration) ? 'NaN' : audio.duration.toFixed(2) + 's' }));
+  audio.addEventListener('canplay', e => handleCanPlay(e));
+  audio.addEventListener('canplaythrough', () =>
+    addLog('canplaythrough', { readyState: rsl(audio.readyState) }));
+  audio.addEventListener('play', () =>
+    addLog('play-event', { readyState: rsl(audio.readyState), currentTime: audio.currentTime.toFixed(3) }, 'lv-play'));
+  audio.addEventListener('playing', () =>
+    addLog('playing-event', { readyState: rsl(audio.readyState), cur: audio.currentTime.toFixed(3), dur: isNaN(audio.duration) ? 'NaN' : audio.duration.toFixed(2) + 's', muted: audio.muted, vol: audio.volume }, 'lv-play'));
+  audio.addEventListener('pause', () =>
+    addLog('pause-event', { currentTime: audio.currentTime.toFixed(3) }));
+  audio.addEventListener('ended', () =>
+    addLog('ended-event', { dur: isNaN(audio.duration) ? 'NaN' : audio.duration.toFixed(2) + 's' }));
+  audio.addEventListener('stalled', () => addLog('stalled', {}, 'lv-warn'));
+  audio.addEventListener('waiting', () =>
+    addLog('waiting', { readyState: rsl(audio.readyState) }, 'lv-warn'));
+  audio.addEventListener('error', () => {
+    const e = audio.error;
+    addLog('audio-error', { code: e?.code, msg: e?.message }, 'lv-err');
+  });
+
+  // ── BIND BUTTONS ─────────────────────────────────────────────────
+  recBtn.addEventListener('click', startRec);
+  stopBtn.addEventListener('click', stopRec);
+  playBtn.addEventListener('click', isB ? playFixB : playBaseline);
+  document.getElementById('clear-' + id).addEventListener('click', () => {
+    logEl.innerHTML = '<p class="empty">이벤트가 없습니다.</p>';
+    diagEl.innerHTML = '<p class="empty">재생 버튼을 누르면 값이 표시됩니다.</p>';
+    attempts.length = 0; playCount = 0;
+  });
+}
+
+createPanel('baseline');
+createPanel('fixb');
+</script>
